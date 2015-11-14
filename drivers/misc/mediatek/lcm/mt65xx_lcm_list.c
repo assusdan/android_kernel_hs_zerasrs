@@ -17,6 +17,13 @@
 #else
 #define LCD_DEBUG(fmt)  printk(fmt)
 #endif
+extern LCM_DRIVER otm9608a_dsi_zeras_lg_lcm_drv;
+extern LCM_DRIVER otm9605a_qhd_dsi_vdo_lcm_drv;
+extern LCM_DRIVER otm9605a_dsi_vdo_djn_qhd_ips_lcm_drv;
+extern LCM_DRIVER otm9605a_ruixin_RX_466OTM_977A_AUO_dsi_vdo_qhd_lcm_drv;
+extern LCM_DRIVER otm9605a_dsi_vdo_cs_lcm_drv;
+extern LCM_DRIVER otm9605a_qhd_dsi_vdo_u701b_ykl_lcm_drv;
+extern LCM_DRIVER otm9605a_dsi_vdo_suoli_lcm_drv;
 extern LCM_DRIVER otm1282a_hd720_dsi_vdo_60hz_lcm_drv;
 extern LCM_DRIVER otm1282a_hd720_dsi_vdo_lcm_drv;
 extern LCM_DRIVER vvx10f008b00_wuxga_dsi_vdo_lcm_drv;
@@ -195,11 +202,72 @@ extern LCM_DRIVER r63419_fhd_truly_phantom_lcm_drv;
 extern LCM_DRIVER r63423_wqhd_truly_phantom_lcm_drv;
 extern LCM_DRIVER kr101ia2s_dsi_vdo_lcm_drv;
 extern LCM_DRIVER r69338_hd720_dsi_vdo_jdi_dw8755a_drv;
-extern LCM_DRIVER otm9605a_qhd_dsi_vdo_drv;
+//extern LCM_DRIVER otm9605a_qhd_dsi_vdo_drv;
 extern LCM_DRIVER ili9806e_dsi_vdo_fwvga_drv;
-
+//guomingyi 20141105 add for s4710bp start.
+extern LCM_DRIVER hx8369b_wvga_dsi_vdo_tinno_drv; 
+extern LCM_DRIVER hx8369b_wvga_dsi_vdo_tinno_boe_drv; 
+extern LCM_DRIVER hx8369b_wvga_dsi_vdo_tinno_txd_drv;
+//guomingyi 20141105 add for s4710bp end.
+extern LCM_DRIVER otm1284a_hd720_dsi_vdo_boe_lcm_drv;
+extern LCM_DRIVER otm1284a_hd720_dsi_vdo_tianma_lcm_drv;
+extern LCM_DRIVER otm1283a_hd720_dsi_vdo_lcm_drv_boe; // by zhangxian added line
+extern LCM_DRIVER ea8061v_dsi_vdo_lcm_drv_amoled; // by zhangxian added line
+//yixuhong 20141216 add for 5301 lcm driver
+extern LCM_DRIVER hx8379c_fwvga_dsi_vdo_tcl_lcm_drv;
+extern LCM_DRIVER ili9806e_fwvga_dsi_vdo_txd_lcm_drv;
+extern LCM_DRIVER otm8018b_fwvga_dsi_vdo_boe_lcm_drv;
+//zhangdognfang add 20141213
+extern LCM_DRIVER hx8394a_dsi_vdo_lcm_drv;
+extern LCM_DRIVER nt35521_hd720_dsi_vdo_tcl_lcm_drv;		//add by lishengli 20140127
+extern LCM_DRIVER otm1283a_hd720_dsi_vdo_dijing_lcm_drv;
+extern LCM_DRIVER otm1283a_hd720_dsi_vdo_lcm_drv;
+extern LCM_DRIVER ili9806e_fwvga_dsi_vdo_tcl_lcm_drv;
+extern LCM_DRIVER otm8019a_fwvga_dsi_vdo_boe_lcm_drv;
+//end by zhangdongfang
 LCM_DRIVER* lcm_driver_list[] = 
 {
+
+#if defined(OTM9605A_QHD_DSI_VDO) 
+        &otm9605a_qhd_dsi_vdo_lcm_drv,
+#endif
+
+#if defined(OTM9608A_DSI_ZERAS_LG) 
+        &otm9608a_dsi_zeras_lg_lcm_drv,
+#endif
+
+#if defined(OTM9605A_DSI_VDO_CS) 
+	&otm9605a_dsi_vdo_cs_lcm_drv,
+#endif
+#if defined(OTM9605A_RUIXIN_RX_466OTM_977A_AUO_DSI_VDO_QHD) 
+	&otm9605a_ruixin_RX_466OTM_977A_AUO_dsi_vdo_qhd_lcm_drv,
+#endif
+#if defined(OTM9605A_QHD_DSI_VDO_U701B_YKL) 
+	&otm9605a_qhd_dsi_vdo_u701b_ykl_lcm_drv,
+#endif
+#if defined(OTM9605A_DSI_VDO_SUOLI) 
+	&otm9605a_dsi_vdo_suoli_lcm_drv,
+#endif
+#if defined(HX8379C_FWVGA_DSI_VDO_TCL)
+		&hx8379c_fwvga_dsi_vdo_tcl_lcm_drv,
+#endif
+	
+#if defined(ILI9806E_FWVGA_DSI_VDO_TXD)
+		&ili9806e_fwvga_dsi_vdo_txd_lcm_drv,
+#endif
+	
+#if defined(OTM8018B_FWVGA_DSI_VDO_BOE)
+		&otm8018b_fwvga_dsi_vdo_boe_lcm_drv,
+#endif
+
+#if defined(OTM1284A_HD720_DSI_VDO_BOE)
+	&otm1284a_hd720_dsi_vdo_boe_lcm_drv,
+#endif
+
+#if defined(OTM1284A_HD720_DSI_VDO_TIANMA)
+	&otm1284a_hd720_dsi_vdo_tianma_lcm_drv,
+#endif
+
 #if defined(OTM1283A_HD720_DSI_VDO_TM)
 	&otm1283a_hd720_dsi_vdo_tm_lcm_drv,
 #endif
@@ -885,6 +953,10 @@ LCM_DRIVER* lcm_driver_list[] =
     &r63419_wqhd_truly_phantom_lcm_drv,
 #endif
 
+#if defined(OTM9605A_DSI_VDO_DJN_QHD_IPS)
+    &otm9605a_dsi_vdo_djn_qhd_ips_lcm_drv,
+#endif
+
 #if defined(R63419_FHD_TRULY_PHANTOM_2K_CMD_OK)
     &r63419_fhd_truly_phantom_lcm_drv,
 #endif
@@ -893,9 +965,50 @@ LCM_DRIVER* lcm_driver_list[] =
     &r63423_wqhd_truly_phantom_lcm_drv,
 #endif
 
-#if defined(OTM9605A_QHD_DSI_VDO)
-	&otm9605a_qhd_dsi_vdo_drv,
+//#if defined(OTM9605A_QHD_DSI_VDO)
+//	&otm9605a_qhd_dsi_vdo_drv,
+//#endif
+//guomingyi 20141105 add for s4710bp start.
+#if defined(HX8369B_WVGA_DSI_VDO_TINNO)
+	&hx8369b_wvga_dsi_vdo_tinno_drv,
 #endif
+#if defined(HX8369B_WVGA_DSI_VDO_TINNO_BOE)
+	&hx8369b_wvga_dsi_vdo_tinno_boe_drv,
+#endif
+#if defined(HX8369B_WVGA_DSI_VDO_TINNO_TXD) 
+	&hx8369b_wvga_dsi_vdo_tinno_txd_drv,
+#endif
+//guomingyi 20141105 add for s4710bp end.
+
+// by zhangxian added line start
+#if defined(OTM1283A_HD720_DSI_VDO_BOE)	
+	&otm1283a_hd720_dsi_vdo_lcm_drv_boe, 
+#endif 
+#if defined(EA8061V_DSI_VIDEO_AMOLED)
+    &ea8061v_dsi_vdo_lcm_drv_amoled,
+#endif
+// by zhangxian added line end
+//zhangdongfang add 20141213
+#if defined(OTM1283A_HD720_DSI_VDO)	
+	&otm1283a_hd720_dsi_vdo_lcm_drv, 
+#endif 
+#if defined(OTM1283A_HD720_DSI_VDO_DIJING)
+	&otm1283a_hd720_dsi_vdo_dijing_lcm_drv,
+#endif
+#if defined(NT35521_HD720_DSI_VDO_TCL)
+    	&nt35521_hd720_dsi_vdo_tcl_lcm_drv,
+#endif
+#if defined(HX8394A_DSI_VDO)			
+	&hx8394a_dsi_vdo_lcm_drv,
+#endif 
+#if defined(ILI9806E_FWVGA_DSI_VDO_TCL)
+	&ili9806e_fwvga_dsi_vdo_tcl_lcm_drv,
+#endif
+#if defined(OTM8019A_FWVGA_DSI_VDO_BOE)
+	&otm8019a_fwvga_dsi_vdo_boe_lcm_drv,
+#endif
+
+//end by zhangdongfang
 };
 
 #define LCM_COMPILE_ASSERT(condition) LCM_COMPILE_ASSERT_X(condition, __LINE__)
