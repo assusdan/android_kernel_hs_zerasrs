@@ -1,0 +1,1 @@
+cmd_arch/arm/mach-mt6582/zerasrs/accelerometer/bma050-new/built-in.o :=  ./toolchain/linaro-4.9/bin/arm-linux-androideabi-ld -EL    -r -o arch/arm/mach-mt6582/zerasrs/accelerometer/bma050-new/built-in.o arch/arm/mach-mt6582/zerasrs/accelerometer/bma050-new/cust_acc.o 
