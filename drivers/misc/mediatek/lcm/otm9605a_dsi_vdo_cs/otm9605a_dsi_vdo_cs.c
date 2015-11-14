@@ -529,7 +529,7 @@ static unsigned int lcm_esd_recover(void)
 }
 
 
-LCM_DRIVER otm9605ad_dsi_vdo_cs_lcm_drv = 
+LCM_DRIVER otm9605a_dsi_vdo_cs_lcm_drv = 
 {
     .name			= "otm9605a_dsi_vdo_cs",
 	.set_util_funcs = lcm_set_util_funcs,
