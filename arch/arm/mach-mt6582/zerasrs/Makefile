@@ -4,8 +4,8 @@ include $(srctree)/drivers/misc/mediatek/Makefile.custom
 # Module project related part
 
 ifeq ($(CONFIG_MTK_SENSOR_SUPPORT),y)
-ifeq ($(CONFIG_MTK_CM36283),y)
-obj-y	+=  alsps/cm36283/
+ifeq ($(CONFIG_MTK_EPL2182),y)
+obj-y	+=  alsps/epl2182/
 endif
 
 ifeq ($(CONFIG_MTK_BMA050_NEW),y)
