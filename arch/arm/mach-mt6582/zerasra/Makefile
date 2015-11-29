@@ -12,6 +12,10 @@ ifeq ($(CONFIG_MTK_LTR501),y)
 obj-y	+=  alsps/ltr501/
 endif
 
+ifeq ($(CONFIG_MTK_EPL2182),y)
+obj-y	+=  alsps/epl2182/
+endif
+
 ifeq ($(CONFIG_MTK_BMA050_NEW),y)
 obj-y   +=  accelerometer/bma050-new/
 endif
