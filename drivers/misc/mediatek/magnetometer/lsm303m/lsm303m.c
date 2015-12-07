@@ -1950,34 +1950,12 @@ static int lsm303m_remove(struct platform_device *pdev)
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
-#if 0
 static struct platform_driver lsm303m_msensor_driver = {
 	.probe      = lsm303m_probe,
 	.remove     = lsm303m_remove,    
 	.driver     = {
 		.name  = "msensor",
 //		.owner = THIS_MODULE,
-	}
-};
-#endif
-
-#ifdef CONFIG_OF
-static const struct of_device_id lsm303m_of_match[] = {
-	{ .compatible = "mediatek,msensor", },
-	{},
-};
-#endif
-
-static struct platform_driver lsm303m_msensor_driver =
-{
-	.probe      = lsm303m_probe,
-	.remove     = lsm303m_remove,    
-	.driver     = 
-	{
-		.name = "msensor",
-        #ifdef CONFIG_OF
-		.of_match_table = lsm303m_of_match,
-		#endif
 	}
 };
 

@@ -12,6 +12,10 @@ ifeq ($(CONFIG_MTK_BMA050_NEW),y)
 obj-y   +=  accelerometer/bma050-new/
 endif
 
+ifeq ($(CONFIG_MTK_LSM303D),y)
+obj-y   +=  accelerometer/lsm303d/
+endif
+
 ifeq ($(CONFIG_MTK_MPU3000),y)
 obj-y   +=  gyroscope/mpu3000/
 endif
@@ -19,9 +23,15 @@ endif
 ifeq ($(CONFIG_MTK_MPU3000_NEW),y)
 obj-y   +=  gyroscope/mpu3000-new/
 endif
+
 ifeq ($(CONFIG_MTK_BMM050_NEW),y)
 obj-y	+=  magnetometer/bmm050-new/
 endif
+
+ifeq ($(CONFIG_MTK_LSM303M),y)
+obj-y	+=  magnetometer/lsm303m/
+endif
+
 endif
 ifneq ($(CONFIG_ARCH_MTK_PROJECT),)
 ARCH_MTK_PROJECT := $(shell echo $(CONFIG_ARCH_MTK_PROJECT))

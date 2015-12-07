@@ -11,6 +11,10 @@ endif
 ifeq ($(CONFIG_MTK_BMA050),y)
 obj-y   +=  bma050/
 endif
+ifeq ($(CONFIG_MTK_LSM303D),y)
+obj-y   +=  lsm303d/
+endif
+
 ifeq ($(CONFIG_MTK_BMA050_NEW),y)
 obj-y   +=  bma050-new/
 endif

@@ -209,7 +209,7 @@ static struct i2c_driver epl2182_i2c_driver =
 {
     .probe      = epl2182_i2c_probe,
     .remove     = epl2182_i2c_remove,
-    //.detect     = epl2182_i2c_detect,
+    .detect     = epl2182_i2c_detect,
     .suspend    = epl2182_i2c_suspend,
     .resume     = epl2182_i2c_resume,
     .id_table   = epl2182_i2c_id,
@@ -459,7 +459,7 @@ static int epl2182_get_als_value(struct epl2182_priv *obj, u16 als)
 
     if(!invalid)
     {
-		#if defined(CONFIG_MTK_AAL_SUPPORT)
+		#if defined(MTK_AAL_SUPPORT)
         int level_high = obj->hw->als_level[idx];
     	int level_low = (idx > 0) ? obj->hw->als_level[idx-1] : 0;
         int level_diff = level_high - level_low;
@@ -826,16 +826,16 @@ static void epl2182_check_ps_data(struct work_struct *work)
 /*----------------------------------------------------------------------------*/
 static ssize_t epl2182_show_reg(struct device_driver *ddri, char *buf)
 {
-	struct i2c_client *client = NULL;
-    ssize_t len = 0;
+
     if(!epl2182_obj)
     {
         APS_ERR("epl2182_obj is null!!\n");
         return 0;
     }
 
-    client = epl2182_obj->client;
+    struct i2c_client *client = epl2182_obj->client;
 
+    ssize_t len = 0;
     len += snprintf(buf+len, PAGE_SIZE-len, "chip id REG 0x00 value = %8x\n", i2c_smbus_read_byte_data(client, 0x00));
     len += snprintf(buf+len, PAGE_SIZE-len, "chip id REG 0x01 value = %8x\n", i2c_smbus_read_byte_data(client, 0x08));
     len += snprintf(buf+len, PAGE_SIZE-len, "chip id REG 0x02 value = %8x\n", i2c_smbus_read_byte_data(client, 0x10));
@@ -1906,7 +1906,6 @@ static int epl2182_remove(struct platform_device *pdev)
 
 
 /*----------------------------------------------------------------------------*/
-#if 0
 static struct platform_driver epl2182_alsps_driver =
 {
     .probe      = epl2182_probe,
@@ -1914,27 +1913,6 @@ static struct platform_driver epl2182_alsps_driver =
     .driver     = {
         .name  = "als_ps",
     }
-};
-#endif
-
-#ifdef CONFIG_OF
-static const struct of_device_id alsps_of_match[] = {
-	{ .compatible = "mediatek,als_ps", },
-	{},
-};
-#endif
-
-static struct platform_driver epl2182_alsps_driver =
-{
-	.probe      = epl2182_probe,
-	.remove     = epl2182_remove,    
-	.driver     = 
-	{
-		.name = "als_ps",
-        #ifdef CONFIG_OF
-		.of_match_table = alsps_of_match,
-		#endif
-	}
 };
 /*----------------------------------------------------------------------------*/
 static int __init epl2182_init(void)

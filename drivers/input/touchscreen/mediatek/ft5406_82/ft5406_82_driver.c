@@ -39,7 +39,7 @@ static u8 tpd_proximity_detect = 1;   //0-->close ; 1--> far away
 #include "cust_gpio_usage.h"
 
 
-#define TPD_POWER_SOURCE		MT6323_POWER_LDO_VGP2
+#define TPD_POWER_SOURCE		MT6323_POWER_LDO_VGP1
 
 
 extern struct tpd_device *tpd;
