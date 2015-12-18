@@ -85,7 +85,7 @@ static int p_point_num = 0;
 #define AGOLD_FINGER_NUM_MAX	5 
 
 #if defined(AGOLD_SUPPORT_AUTO_UPG)
-#define CFG_SUPPORT_AUTO_UPG
+//#define CFG_SUPPORT_AUTO_UPG
 #endif
 
 struct touch_info {
