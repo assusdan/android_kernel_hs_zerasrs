@@ -1120,6 +1120,18 @@ config MTK_BMM050
 	bool "MTK_BMM050 for MediaTek package"
 	default n
 
+config MTK_LSM303D
+	bool "MTK_LSM303D for MediaTek package"
+	default n
+
+config MTK_LSM303M
+	bool "MTK_LSM303M for MediaTek package"
+	default n
+
+config MTK_BMM050
+	bool "MTK_BMM050 for MediaTek package"
+	default n
+
 config MTK_MMC3416X
 	bool "MTK_MMC3416X for MediaTek package"
 	default n
