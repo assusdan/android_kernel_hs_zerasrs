@@ -344,6 +344,11 @@ static void lcm_get_params(LCM_PARAMS *params)
 		//params->dsi.compatibility_for_nvk = 1;		// this parameter would be set to 1 if DriverIC is NTK's and when force match DSI clock for NTK's
 }
 
+static unsigned int lcm_compare_id(void)
+{
+		return 1;
+		}
+
 static void lcm_init(void)
 {
 
@@ -458,7 +463,7 @@ static unsigned int lcm_esd_check(void)
     //---------------------------------
     // Set Maximum Return Size
     //---------------------------------
-    CKT_SET_HS_READ();
+    //CKT_SET_HS_READ();
     array[0] = 0x00013708;
     dsi_set_cmdq(array, 1, 1);
 
@@ -466,7 +471,7 @@ static unsigned int lcm_esd_check(void)
     // Read [9Ch, 00h, ECC] + Error Report(4 Bytes)
     //---------------------------------
     read_reg_v2(0x0A, buffer, 1);
-    CKT_RESTORE_HS_READ();
+    //CKT_RESTORE_HS_READ();
 
 #ifdef ESD_DEBUG
     printk("lcm_esd_check : read(0x0A) : [0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", buffer[0],buffer[1],buffer[2],buffer[3],buffer[4],buffer[5],buffer[6]);
