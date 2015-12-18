@@ -34,7 +34,7 @@ static u8 tpd_proximity_flag = 0;
 static u8 tpd_proximity_detect = 1;   //0-->close ; 1--> far away
 #endif
 
-#include "tpd_custom_ft6306.h"
+#include "tpd_custom_ft5206.h"
 
 #include "cust_gpio_usage.h"
 
@@ -85,7 +85,7 @@ static int p_point_num = 0;
 #define AGOLD_FINGER_NUM_MAX	5 
 
 #if defined(AGOLD_SUPPORT_AUTO_UPG)
-//#define CFG_SUPPORT_AUTO_UPG
+#define CFG_SUPPORT_AUTO_UPG
 #endif
 
 struct touch_info {
@@ -151,7 +151,7 @@ static unsigned short i2c_addr[] = {0x72};
 static  void tpd_down(int x, int y, int p) {
 
 #ifdef TPD_HAVE_BUTTON
-	if(CONFIG_MTK_LCM_PHYSICAL_ROTATION == 270 || CONFIG_MTK_LCM_PHYSICAL_ROTATION == 90)
+	if(MTK_LCM_PHYSICAL_ROTATION == 270 || MTK_LCM_PHYSICAL_ROTATION == 90)
     {
 		if(boot_mode!=NORMAL_BOOT && x>=TPD_RES_Y) 
 		{ 
@@ -178,7 +178,7 @@ static  void tpd_down(int x, int y, int p) {
 	}
 #endif
 
-	if(CONFIG_MTK_LCM_PHYSICAL_ROTATION == 270 || CONFIG_MTK_LCM_PHYSICAL_ROTATION == 90) 
+	if(MTK_LCM_PHYSICAL_ROTATION == 270 || MTK_LCM_PHYSICAL_ROTATION == 90) 
 	{
 		int temp;
 
@@ -192,7 +192,7 @@ static  void tpd_down(int x, int y, int p) {
 	 input_report_key(tpd->dev, BTN_TOUCH, 1);
 	 input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 1);
 
-	if(CONFIG_MTK_LCM_PHYSICAL_ROTATION == 180 && y <= CONFIG_LCM_HEIGHT && boot_mode ==NORMAL_BOOT)
+	if(MTK_LCM_PHYSICAL_ROTATION == 180 && y <= CONFIG_LCM_HEIGHT && boot_mode ==NORMAL_BOOT)
 	{
 	 input_report_abs(tpd->dev, ABS_MT_POSITION_X, CONFIG_LCM_WIDTH-x);
 	 input_report_abs(tpd->dev, ABS_MT_POSITION_Y, CONFIG_LCM_HEIGHT-y);
@@ -1600,4 +1600,3 @@ static void __exit tpd_driver_exit(void) {
  
  module_init(tpd_driver_init);
  module_exit(tpd_driver_exit);
-
