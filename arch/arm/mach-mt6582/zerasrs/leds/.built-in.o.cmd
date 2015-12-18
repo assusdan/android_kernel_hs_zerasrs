@@ -1,0 +1,1 @@
+cmd_arch/arm/mach-mt6582/zerasrs/leds/built-in.o :=  ./toolchain/linaro-4.9/bin/arm-linux-androideabi-ld -EL    -r -o arch/arm/mach-mt6582/zerasrs/leds/built-in.o arch/arm/mach-mt6582/zerasrs/leds/mt65xx/built-in.o 
