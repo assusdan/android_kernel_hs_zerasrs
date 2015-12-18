@@ -261,12 +261,14 @@ static void push_table(struct LCM_setting_table *table, unsigned int count, unsi
 {
 	unsigned int i;
 
-    for(i = 0; i < count; i++) {
+    for(i = 0; i < count; i++) 
+{
 		
         unsigned cmd;
         cmd = table[i].cmd;
 		
-        switch (cmd) {
+        switch (cmd) 
+{
 			
             case REGFLAG_DELAY :
                 MDELAY(table[i].count);
@@ -366,27 +368,17 @@ static void lcm_init(void)
 
 static void lcm_suspend(void)
 {
-		//push_table(lcm_sleep_mode_in_setting, sizeof(lcm_sleep_mode_in_setting) / sizeof(struct LCM_setting_table), 1);
-		//SET_RESET_PIN(0);
-		//MDELAY(1);
-		//SET_RESET_PIN(1);
-			unsigned int data_array[2];
-#if 1
-		//data_array[0] = 0x00000504; // Display Off
-		//dsi_set_cmdq(&data_array, 1, 1);
-		//MDELAY(100); 
-		data_array[0] = 0x00280500; // Display Off
-		dsi_set_cmdq(&data_array, 1, 1);
+		
+			unsigned int data_array[16];
+		
+		data_array[0] = 0x00280500;
+		dsi_set_cmdq(data_array, 1, 1);
 		MDELAY(10); 
-		data_array[0] = 0x00100500; // Sleep In
-		dsi_set_cmdq(&data_array, 1, 1);
-		MDELAY(100);
-#endif
-#ifdef BUILD_LK
-		printf("zhibin uboot %s\n", __func__);
-#else
-		printk("zhibin kernel %s\n", __func__);
-#endif
+
+		data_array[0] = 0x00100500;
+		dsi_set_cmdq(data_array, 1, 1);
+		MDELAY(120);
+
 
 }
 
