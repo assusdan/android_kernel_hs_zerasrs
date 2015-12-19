@@ -27,8 +27,13 @@ endif
 ifeq ($(CONFIG_MTK_STK3X1X),y)
 obj-y	+=  stk3x1x/
 endif
+
 ifeq ($(CONFIG_MTK_CM36652_NEW),y)
 obj-y	+=  cm36652-new/
+endif
+
+ifeq ($(CONFIG_MTK_TMD2772),y)
+obj-y	+=  tmd2772/
 endif
 
 ifeq ($(CONFIG_MTK_APDS9930),y)
