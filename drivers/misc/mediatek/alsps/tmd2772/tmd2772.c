@@ -105,7 +105,7 @@ int test_far=0;
 u16 data_test[13]={0};
  int cali_num_end=0;
  int calling_first = 1;
- #define CKT_HALL_SWITCH_SUPPORT 1
+ #define CKT_HALL_SWITCH_SUPPORT 0
  #if CKT_HALL_SWITCH_SUPPORT
 extern int g_is_calling;
  #endif
@@ -2432,8 +2432,7 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	obj->als_level_num = sizeof(obj->hw->als_level)/sizeof(obj->hw->als_level[0]);
 	obj->als_value_num = sizeof(obj->hw->als_value)/sizeof(obj->hw->als_value[0]);  
 	/*Lenovo-sw chenlj2 add 2011-06-03,modified gain 16 to 1/5 accoring to actual thing */
-	obj->als_modulus = (400*100*ZOOM_TIME)/(1*150);//(1/Gain)*(400/Tine), this value is fix after init ATIME and CONTROL register value
-										//(400)/16*2.72 here is amplify *100 //16
+	obj->als_modulus = 16
 	BUG_ON(sizeof(obj->als_level) != sizeof(obj->hw->als_level));
 	memcpy(obj->als_level, obj->hw->als_level, sizeof(obj->als_level));
 	BUG_ON(sizeof(obj->als_value) != sizeof(obj->hw->als_value));
