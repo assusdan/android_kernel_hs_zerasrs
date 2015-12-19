@@ -3347,7 +3347,7 @@ static int __init tmd2772_init(void)
 		return -ENODEV;
 	}
 	#endif
-	//hwmsen_alsps_sensor_add(&TMD2772_init_info);
+	hwmsen_alsps_sensor_add(&TMD2772_init_info);
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
