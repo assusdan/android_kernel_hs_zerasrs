@@ -33,7 +33,7 @@ obj-y	+=  cm36652-new/
 endif
 
 ifeq ($(CONFIG_MTK_TMD2772),y)
-obj-y	+=  tmd2772/
+obj-y	+=  tmd2772_auto/
 endif
 
 ifeq ($(CONFIG_MTK_APDS9930),y)
