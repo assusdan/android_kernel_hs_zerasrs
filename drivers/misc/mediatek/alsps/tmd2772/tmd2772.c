@@ -3347,6 +3347,7 @@ static int __init tmd2772_init(void)
 		return -ENODEV;
 	}
 	#endif
+	extern int hwmsen_alsps_sensor_add(struct sensor_init_info* obj) ;
 	hwmsen_alsps_sensor_add(&TMD2772_init_info);
 	return 0;
 }
