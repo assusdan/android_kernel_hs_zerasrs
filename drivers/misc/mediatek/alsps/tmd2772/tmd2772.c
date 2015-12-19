@@ -116,7 +116,7 @@ int test_far=0;
 u16 data_test[13]={0};
  int cali_num_end=0;
  int calling_first = 1;
- #define CKT_HALL_SWITCH_SUPPORT 1
+ #define CKT_HALL_SWITCH_SUPPORT 0
  #if CKT_HALL_SWITCH_SUPPORT
 extern int g_is_calling;
  #endif
