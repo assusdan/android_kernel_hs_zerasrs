@@ -19,7 +19,7 @@
 #include <linux/ioctl.h>
 
 extern int TMD2772_CMM_PPCOUNT_VALUE;
-extern int ZOOM_TIME;
+extern int TMD2772_ZOOM_TIME;
 extern int TMD2772_CMM_CONTROL_VALUE;
 
 #define TMD2772_CMM_ENABLE 		0X80
@@ -47,7 +47,6 @@ extern int TMD2772_CMM_CONTROL_VALUE;
 #define TMD2772_CMM_C1DATA_L 	0X96
 #define TMD2772_CMM_C1DATA_H 	0X97
 #define TMD2772_CMM_OFFSET	0X9E  //add 
-
 
 #define TMD2772_SUCCESS						0
 #define TMD2772_ERR_I2C						-1
