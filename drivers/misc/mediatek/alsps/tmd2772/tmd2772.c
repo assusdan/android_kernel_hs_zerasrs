@@ -89,7 +89,7 @@ static int tmd2772_i2c_resume(struct i2c_client *client);
 static int store_status(unsigned int *flag);
 
 static u8 store_enable_register=0;
-extern struct alsps_hw *TMD2772_get_cust_alsps_hw(void);
+extern struct alsps_hw *get_cust_alsps_hw(void);
 	
 static int  TMD2772_local_init(void);
 static int  TMD_remove(void);
@@ -3120,7 +3120,7 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	memset(obj, 0, sizeof(*obj));
 	tmd2772_obj = obj;
 
-	obj->hw = TMD2772_get_cust_alsps_hw();
+	obj->hw = get_cust_alsps_hw();
 	tmd2772_get_addr(obj->hw, &obj->addr);
 
 	/*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
@@ -3306,7 +3306,7 @@ static struct platform_driver tmd2772_alsps_driver = {
 
 static int TMD_remove(void)
 {
-    struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
+    struct alsps_hw *hw = get_cust_alsps_hw();
 
     APS_FUN();    
     tmd2772_power(hw, 0);    
@@ -3317,7 +3317,7 @@ static int TMD_remove(void)
 
 static int TMD2772_local_init(void)
 {
-   struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
+   struct alsps_hw *hw = get_cust_alsps_hw();
 	APS_FUN();
 
 	tmd2772_power(hw, 1);
@@ -3337,7 +3337,7 @@ static int TMD2772_local_init(void)
 static int __init tmd2772_init(void)
 {
 	APS_FUN();
-	struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
+	struct alsps_hw *hw = get_cust_alsps_hw();
 	APS_LOG("%s: i2c_number=%d\n", __func__,hw->i2c_num); 
 	i2c_register_board_info(hw->i2c_num, &i2c_TMD2772, 1);
 	#if 0
@@ -3347,7 +3347,6 @@ static int __init tmd2772_init(void)
 		return -ENODEV;
 	}
 	#endif
-	extern int hwmsen_alsps_sensor_add(struct sensor_init_info* obj) ;
 	hwmsen_alsps_sensor_add(&TMD2772_init_info);
 	return 0;
 }
