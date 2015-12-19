@@ -89,6 +89,17 @@ static int tmd2772_i2c_resume(struct i2c_client *client);
 static int store_status(unsigned int *flag);
 
 static u8 store_enable_register=0;
+extern struct alsps_hw *TMD2772_get_cust_alsps_hw(void);
+	
+static int  TMD2772_local_init(void);
+static int  TMD_remove(void);
+static int TMD2772_init_flag =-1; // 0<==>OK -1 <==> fail
+
+static struct sensor_init_info TMD2772_init_info = {
+		.name = "TMD2772",
+		.init = TMD2772_local_init,
+		.uninit = TMD_remove,
+};
 static struct tmd2772_priv *g_tmd2772_ptr = NULL;
 
 static int tmd2772_init_client(struct i2c_client *client);
@@ -105,7 +116,7 @@ int test_far=0;
 u16 data_test[13]={0};
  int cali_num_end=0;
  int calling_first = 1;
- #define CKT_HALL_SWITCH_SUPPORT 0
+ #define CKT_HALL_SWITCH_SUPPORT 1
  #if CKT_HALL_SWITCH_SUPPORT
 extern int g_is_calling;
  #endif
@@ -120,7 +131,9 @@ static struct PS_CALI_DATA_STRUCT ps_cali={0,0,0};
 static int intr_flag_value = 0;
 static unsigned int temp_ps_data = 0;
 static int indialing=0;
+
 struct mutex mutex;
+
 /*----------------------------------------------------------------------------*/
 typedef enum {
     CMC_BIT_ALS    = 1,
@@ -713,7 +726,7 @@ static int tmd2772_check_and_clear_intr(struct i2c_client *client)
 		intl = 1;		
 	}
 
-	if(0 == res)
+	if(0 == res) 
 	{
 		if((1 == intp) && (0 == intl))
 		{
@@ -1142,7 +1155,7 @@ static int tmd2772_init_client(struct i2c_client *client)
 		else
 		{
 			databuf[0] = TMD2772_CMM_INT_LOW_THD_LOW;	
-			databuf[1] = (u8)(750 & 0x00FF);
+			databuf[1] = (u8)(atomic_read(&obj->ps_thd_val_low) & 0x00FF);
 			res = i2c_master_send(client, databuf, 0x2);
 			if(res <= 0)
 			{
@@ -1150,7 +1163,7 @@ static int tmd2772_init_client(struct i2c_client *client)
 				return TMD2772_ERR_I2C;
 			}
 			databuf[0] = TMD2772_CMM_INT_LOW_THD_HIGH;	
-			databuf[1] = (u8)((750 & 0xFF00) >> 8);
+			databuf[1] = (u8)((atomic_read(&obj->ps_thd_val_low) & 0xFF00) >> 8);
 			res = i2c_master_send(client, databuf, 0x2);
 			if(res <= 0)
 			{
@@ -1158,7 +1171,7 @@ static int tmd2772_init_client(struct i2c_client *client)
 				return TMD2772_ERR_I2C;
 			}
 			databuf[0] = TMD2772_CMM_INT_HIGH_THD_LOW;	
-			databuf[1] = (u8)(900 & 0x00FF);
+			databuf[1] = (u8)(atomic_read(&obj->ps_thd_val_high) & 0x00FF);
 			res = i2c_master_send(client, databuf, 0x2);
 			if(res <= 0)
 			{
@@ -1166,7 +1179,7 @@ static int tmd2772_init_client(struct i2c_client *client)
 				return TMD2772_ERR_I2C;
 			}
 			databuf[0] = TMD2772_CMM_INT_HIGH_THD_HIGH;	
-			databuf[1] = (u8)((900 & 0xFF00) >> 8);;
+			databuf[1] = (u8)((atomic_read(&obj->ps_thd_val_high) & 0xFF00) >> 8);
 			res = i2c_master_send(client, databuf, 0x2);
 			if(res <= 0)
 			{
@@ -1196,7 +1209,7 @@ static int tmd2772_init_client(struct i2c_client *client)
 	}
 
 	databuf[0] = TMD2772_CMM_CONFIG;    
-	databuf[1] = 0x05;
+	databuf[1] = 0x00;
 	res = i2c_master_send(client, databuf, 0x2);
 	if(res <= 0)
 	{
@@ -1223,8 +1236,46 @@ static int tmd2772_init_client(struct i2c_client *client)
 		goto EXIT_ERR;
 		return TMD2772_ERR_I2C;
 	}
+#if 	0
+	databuf[0] = TMD2772_CMM_ID;  
+	res = i2c_master_send(client, databuf, 0x1);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+	res = i2c_master_recv(client, databuf, 0x1);
+	if(res <= 0)
+	{		
+	    goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+    printk("ALSPS ID: %x\n",databuf[0]);//0x30 or 0x39
+   #endif
+   #if DO_CALIBARTION
+   #if PRO_OFFSET
+     databuf[0] = TMD2772_CMM_OFFSET;
+     databuf[1] = offset_data;
+     res = i2c_master_send(client, databuf, 0x2);
+     if(res <= 0)
+     {
+    	goto EXIT_ERR;
+    	return TMD2772_ERR_I2C;
+     }
+  #endif
+#else
+	databuf[0] = TMD2772_CMM_OFFSET;    
+	databuf[1] = 0x00;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+#endif
 	/*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
-	
+	if(0 == obj->hw->polling_mode_ps)
+	{
 	if((res = tmd2772_setup_eint(client))!=0)
 	{
 		APS_ERR("setup eint: %d\n", res);
@@ -1236,11 +1287,11 @@ static int tmd2772_init_client(struct i2c_client *client)
 		APS_ERR("check/clear intr: %d\n", res);
 		//    return res;
 	}
-	
+	}
 	return TMD2772_SUCCESS;
 
 EXIT_ERR:
-	APS_ERR("init dev: %d\n", res);
+	APS_ERR("tmd2772 init dev fail: %d\n", res);
 	return res;
 }
 
@@ -1490,6 +1541,7 @@ long tmd2772_read_ps(struct i2c_client *client, u16 *data)
 //	u16 ps_value;    
 	u8 ps_value_low[1], ps_value_high[1];
 	u8 buffer[1];
+	u8 buffer_id[1]={0};
 	long res = 0;
 
 	if(client == NULL)
@@ -1497,7 +1549,19 @@ long tmd2772_read_ps(struct i2c_client *client, u16 *data)
 		APS_DBG("CLIENT CANN'T EQUL NULL\n");
 		return -1;
 	}
-
+       #if 0
+	buffer[0]=0x92;
+	res = i2c_master_send(client, buffer, 0x1);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+	}
+	res = i2c_master_recv(client, buffer_id, 0x01);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+	}
+	#endif
 	buffer[0]=TMD2772_CMM_PDATA_L;
 	res = i2c_master_send(client, buffer, 0x1);
 	if(res <= 0)
@@ -1522,8 +1586,15 @@ long tmd2772_read_ps(struct i2c_client *client, u16 *data)
 		goto EXIT_ERR;
 	}
 
-	*data = ps_value_low[0] | (ps_value_high[0]<<8);
-	APS_DBG("ps_data=%d, low:%d  high:%d", *data, ps_value_low[0], ps_value_high[0]);
+	if((*data = (ps_value_low[0] | (ps_value_high[0]<<8))) > 1023)
+		*data = tmp_data;
+	else
+		tmp_data = *data;
+	if(1==Enable_ALSPS_LOG)
+		{
+	printk("luosen --read_ps_data =%x\n",*data);
+	printk("luosen read_ps_data=%d, low:%d  high:%d\n", *data, ps_value_low[0], ps_value_high[0]);
+              }
 	return 0;    
 
 EXIT_ERR:
@@ -1533,15 +1604,13 @@ EXIT_ERR:
 /*----------------------------------------------------------------------------*/
 static int tmd2772_get_ps_value(struct tmd2772_priv *obj, u16 ps)
 {
-	APS_FUN();
-	APS_DBG("PS raw data:  %05d => \n", ps);
+	int val,mask = atomic_read(&obj->ps_mask);
 
-	int val;// mask = atomic_read(&obj->ps_mask);
 	int invalid = 0;
+	int j;
 	static int val_temp=1;
-	int type = -1;
 	 /*Lenovo-sw chenlj2 add 2011-10-12 begin*/
-//	 u16 temp_ps[1];
+	 u16 temp_ps[1];
 	 /*Lenovo-sw chenlj2 add 2011-10-12 end*/
 	 
 	
@@ -1554,43 +1623,41 @@ static int tmd2772_get_ps_value(struct tmd2772_priv *obj, u16 ps)
 	//return 1;
     /*Lenovo-sw zhuhc delete 2011-10-12 end*/
 
-        //mdelay(160);
+        mdelay(60);
 	//tmd2772_read_ps(obj->client,temp_ps);
-	if(ps_cali.valid == 1)
+
+#if 0
+if(1==Enable_ALSPS_LOG)
 		{
-			//APS_LOG("tmd2772_get_ps_value val_temp  = %d",val_temp);
-			//if((ps >ps_cali.close)&&(temp_ps[0] >ps_cali.close))
-			APS_DBG("ps_cali.close = %d ,ps_cali.far_away =%d \n",ps_cali.close,ps_cali.far_away);
+        for(j = 0;j<cali_count;j++)
+	printk("luosen data_test[%d]=%d,cali_num_end=%d\n",j,data_test[j],cali_num_end);
+	printk("luosen calling_first=%d\n",calling_first);
+	printk("luosen test_cali = %d, test_close = %d,test_far=%d\n",test_cali,test_close,test_far);		
+	//printk("luosen close = %d,far_away=%d\n",ps_cali.close,ps_cali.far_away);
+	}
 			if((ps >ps_cali.close))
 			{
 				val = 0;  /*close*/
 				val_temp = 0;
 				intr_flag_value = 1;
-				type = 1;
 			}
-			//else if((ps <ps_cali.far_away)&&(temp_ps[0] < ps_cali.far_away))
-			else if((ps <ps_cali.far_away))
+			else if((ps <ps_cali.far_away)&&(temp_ps[0] < ps_cali.far_away))
 			{
 				val = 1;  /*far away*/
 				val_temp = 1;
 				intr_flag_value = 0;
-				type = 2;
 			}
 			else
 				val = val_temp;
 
 			//APS_LOG("tmd2772_get_ps_value val  = %d",val);
-	}
-	else
-	{
-			APS_DBG("ps_thd_val_high = %d ,ps_thd_val_low =%d \n", atomic_read(&obj->ps_thd_val_high),atomic_read(&obj->ps_thd_val_low));	
+#else
 			//if((ps > atomic_read(&obj->ps_thd_val_high))&&(temp_ps[0]  > atomic_read(&obj->ps_thd_val_high)))
 			if((ps > atomic_read(&obj->ps_thd_val_high)))
 			{
 				val = 0;  /*close*/
 				val_temp = 0;
 				intr_flag_value = 1;
-				type = 3;
 			}
 			//else if((ps < atomic_read(&obj->ps_thd_val_low))&&(temp_ps[0]  < atomic_read(&obj->ps_thd_val_low)))
 			else if((ps < atomic_read(&obj->ps_thd_val_low)))
@@ -1598,17 +1665,15 @@ static int tmd2772_get_ps_value(struct tmd2772_priv *obj, u16 ps)
 				val = 1;  /*far away*/
 				val_temp = 1;
 				intr_flag_value = 0;
-				type = 4;
 			}
 			else
 			       val = val_temp;	
-			
-	}
+#endif	
+//end
 	
 	if(atomic_read(&obj->ps_suspend))
 	{
 		invalid = 1;
-		type = 5;
 	}
 	else if(1 == atomic_read(&obj->ps_deb_on))
 	{
@@ -1621,7 +1686,6 @@ static int tmd2772_get_ps_value(struct tmd2772_priv *obj, u16 ps)
 		if (1 == atomic_read(&obj->ps_deb_on))
 		{
 			invalid = 1;
-			type = 6;
 		}
 	}
 	else if (obj->als > 45000)
@@ -1633,12 +1697,11 @@ static int tmd2772_get_ps_value(struct tmd2772_priv *obj, u16 ps)
 
 	if(!invalid)
 	{
-		APS_DBG("PS:  %05d => %05d,   type = %d \n", ps, val,type);
+		printk("ckt debug PS:  %05d => %05d\n", ps, val);
 		return val;
 	}	
 	else
 	{
-		APS_DBG("wrong PS:  %05d => %05d,   type = %d \n", ps, val,type);
 		return -1;
 	}	
 }
@@ -1697,7 +1760,7 @@ static void tmd2772_eint_work(struct work_struct *work)
 					return;
 				}
 				databuf[0] = TMD2772_CMM_INT_HIGH_THD_HIGH; 
-				databuf[1] = (u8)((0xFF00) >> 8);;
+				databuf[1] = (u8)((0xFF00) >> 8);
 				res = i2c_master_send(obj->client, databuf, 0x2);
 				if(res <= 0)
 				{
@@ -1803,54 +1866,178 @@ static void tmd2772_WriteCalibration(struct PS_CALI_DATA_STRUCT *data_cali)
 }
 #endif
 
-#if 0
+#if 1
 static int tmd2772_read_data_for_cali(struct i2c_client *client, struct PS_CALI_DATA_STRUCT *ps_data_cali)
 {
-     int i=0 ,err = 0,j = 0;
-	 u16 data[21],sum,data_cali;
-
-	 for(i = 0;i<20;i++)
+     int i=0 ,err = 0,j = 0,m,n;
+	 u16 data[13],sum,data_cali,temp,mid_data;
+     int cali_num,cali_num_total;
+        sum = 0;
+	cali_num_total =0;	
+	cali_num = 13;
+	cali_num_end = 0;
+	memset(&data[0],0,sizeof(u16)*cali_num);
+	memset(&data_test[0],0,sizeof(u16)*cali_num);
+	if(1==Enable_ALSPS_LOG)
+	{
+	for(j = 0;j<cali_num;j++)
 	 	{
-	 		mdelay(5);//50
+	printk("luosen 001 data_test[%d]=%d,data=%d\n",j,data_test[j],data[j]);
+	       }
+        } 
+	     i=0;
+	     j=0;
+while(cali_num_total<=cali_num)
+	{
+		 		mdelay(60);//50
+			if(err = tmd2772_read_ps(client,&data[j]))
+			{
+				printk("luosen tmd2772_read_data_for_cali fail: %d\n", i); 
+				return 0;
+			}
+			mdelay(55);
+			if((data[j]>0)&&data[j]<=900)
+				{
+				data_test[i]=data[j];
+				i++;
+				cali_num_total=i+1;
+				}
+			cali_num_end++;
+			if(cali_num_end>30)
+				break;
+	}
+	printk("luosenps i=%d,j=%d,cali_num_end=%d\n",i,j,cali_num_end);
+#if 	0
+   for(i = 0;i<cali_num;i++)
+	 	{
+	 		mdelay(60);//50
 			if(err = tmd2772_read_ps(client,&data[i]))
 			{
-				APS_ERR("tmd2772_read_data_for_cali fail: %d\n", i); 
-				break;
+				printk("luosen tmd2772_read_data_for_cali fail: %d\n", i); 
+				return 0;
 			}
+			data_test[i]=data[i];
+	     #if 0		
 			else
 				{
+			printk("luosen tmd2772_read_data_for_cali data[%d]=%d\n", i,data[i]); 
 					sum += data[i];
+					data_test[i]=data[i];
+					cali_num_end=cali_num;
+			}
+		#endif
+			mdelay(55);//160
+	 	}
+   #endif
+  for(m=0;m<cali_num-1;m++)
+  	{
+  	for(n=0;n<cali_num-m-1;n++)
+		{
+		if(data_test[n]>data_test[n+1])
+			{
+			temp=data_test[n];
+			data_test[n]=data_test[n+1];
+			data_test[n+1]=temp;
+			}
+		}
+  	}
+mid_data=data_test[(cali_num+1)/2];
+	 
+  if(1==Enable_ALSPS_LOG)
+  	{
+     for(j = 0;j<cali_num;j++)
+		{
+	printk("luosen sort data[%d]=%d\n",j,data_test[j]);
+	       }
+     printk("luosen mid_data =%d\n",mid_data);
+        }
+	 
+	 	//data_cali = sum/cali_num;
+	 	data_cali = mid_data;
+			ps_data_cali->close = data_cali + 100;
+			ps_data_cali->far_away = data_cali + 60;
+			test_cali=data_cali;
+			test_close=ps_data_cali->close ;
+			test_far=ps_data_cali->far_away;
+			 if(ps_data_cali->close > 900)
+	 	{
+		  	ps_data_cali->close = 900;
+			ps_data_cali->far_away = 750;
+			err= 0;
+			}
+			//if(data_cali>600)
+			//return -1;
+		//	if(data_cali<=100)
+           return 1;
+}
+#else
+static int tmd2772_read_data_for_cali(struct i2c_client *client, struct PS_CALI_DATA_STRUCT *ps_data_cali)
+			{
+     int i=0 ,err = 0,j = 0;
+	 u16 data[20],sum,data_cali;
+     int cali_num = 20;
+        sum = 0;
+	memset(&data[0],0,sizeof(u16)*20);
+	memset(&data_test[0],0,sizeof(u16)*20);
+	if(1==Enable_ALSPS_LOG)
+	{
+	for(j = 0;j<20;j++)
+		{
+	printk("luosen 001 data_test[%d]=%d,data=%d\n",j,data_test[j],data[j]);
+			}
+        } 
+   for(i = 0;i<20;i++)
+			{
+	 		mdelay(60);//50
+			if(err = tmd2772_read_ps(client,&data[i]))
+			{
+				printk("luosen tmd2772_read_data_for_cali fail: %d\n", i); 
+				return 0;
+			}
+			else
+			{
+			printk("luosen tmd2772_read_data_for_cali data[%d]=%d\n", i,data[i]); 
+				if(0==data[i])
+					{
+					cali_num--;//��������Ϊ0�����Ե�����������ƽ��ֵ��С
+					}
+				else if((data[i]>900)&&0==i)
+					{
+					data[i]=0;
+					cali_num--;
+					}
+				 else if(i>0)
+				 	{
+					 	if((abs(data[i]-data[i-1])>20)&&data[i-1]>0)
+					 	{		
+						data[i]=data[i-1];
+					 	}
+					}
+	          			sum += data[i];
+					data_test[i]=data[i];
+					cali_num_end=cali_num;
 			}
 			mdelay(55);//160
 	 	}
-	 
-	 for(j = 0;j<20;j++)
-	 	APS_LOG("%d\t",data[j]);
-	 
-	 if(i == 20)
-	 	{
-			data_cali = sum/20;
-			APS_LOG("tmd2772_read_data_for_cali data = %d",data_cali);
-			if(data_cali>600)
-			return -1;
-			if(data_cali<=100)
-			{
-				ps_data_cali->close =data_cali*22/10;
-				ps_data_cali->far_away = data_cali*19/10;
-				ps_data_cali->valid =1;
+	 	data_cali = sum/cali_num;
+			ps_data_cali->close = data_cali + 60;
+			ps_data_cali->far_away = data_cali + 40;
+			test_cali=data_cali;
+			test_close=ps_data_cali->close ;
+			test_far=ps_data_cali->far_away;
+	#if 0		
+			if(data_cali>800)
+				{
+	databuf[0] = TMD2772_CMM_OFFSET;    
+	databuf[1] = 0x7F;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
 			}
-			else if(100<data_cali&&data_cali<300)
-			{
-				ps_data_cali->close = data_cali*2;
-				ps_data_cali->far_away =data_cali*17/10;
-				ps_data_cali->valid = 1;
-			}
-			else
-			{
-				ps_data_cali->close = data_cali*18/10;
-				ps_data_cali->far_away =data_cali*15/10;
-				ps_data_cali->valid = 1;
-			}
+				}
+	#endif
 		        if(ps_data_cali->close > 900)
 		       {
 		  	ps_data_cali->close = 900;
@@ -1858,28 +2045,119 @@ static int tmd2772_read_data_for_cali(struct i2c_client *client, struct PS_CALI_
 			err= 0;
 	         	}
 			else  if(ps_data_cali->close < 100)
-			{
-			   ps_data_cali->close = 200;
-			   ps_data_cali->far_away = 150;
-			   err= 0;
-			}
-
-			ps_cali.close = ps_data_cali->close;
-			ps_cali.far_away= ps_data_cali->far_away;
-			ps_cali.valid = 1;
-			APS_LOG("tmd2772_read_data_for_cali close  = %d,far_away = %d,valid = %d",ps_data_cali->close,ps_data_cali->far_away,ps_data_cali->valid);
-	
-	 	}
-	 else
-	 	{
-	 	ps_data_cali->valid = 0;
-	 	err=  -1;
-	 	}
-	 return err;
-	 	
-
+           return 1;
 }
 #endif
+static int tmd2772_init_client_factory(struct i2c_client *client)
+			{
+	struct tmd2772_priv *obj = i2c_get_clientdata(client);
+	u8 databuf[2];
+	int res = 0;
+	printk("--@@line :%d,funct:%s\n",__LINE__,__FUNCTION__);
+	databuf[0] = TMD2772_CMM_ENABLE;
+	databuf[1] = 0x00;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+			}
+	databuf[0] = TMD2772_CMM_ATIME;
+	databuf[1] = 0xEE;//0xF6
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+
+	databuf[0] = TMD2772_CMM_PTIME;
+	databuf[1] = 0xFF;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+	databuf[0] = TMD2772_CMM_WTIME;
+	databuf[1] = 0xEE;//0xFC,this is suggest by FAE
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+	
+	databuf[0] = TMD2772_CMM_CONFIG;
+	databuf[1] = 0x00;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	 	}
+	databuf[0] = TMD2772_CMM_PPCOUNT;
+	databuf[1] = TMD2772_CMM_PPCOUNT_VALUE;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+	databuf[0] = TMD2772_CMM_CONTROL;
+	databuf[1] = TMD2772_CMM_CONTROL_VALUE;
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+	}
+     databuf[0] = TMD2772_CMM_OFFSET;
+     databuf[1] = 0;
+     res = i2c_master_send(client, databuf, 0x2);
+     if(res <= 0)
+     {
+		goto EXIT_ERR;
+		return TMD2772_ERR_I2C;
+     }
+
+	 return TMD2772_SUCCESS;
+EXIT_ERR:
+	APS_ERR("reinit dev: %d\n", res);
+	return res;
+}
+static int store_status(unsigned int *flag)
+	 	{
+	u8 databuf[1];
+	int res;
+	if((*flag == 0)&&(0 != store_enable_register))
+	{
+		databuf[0] = TMD2772_CMM_ENABLE;
+		databuf[1] = store_enable_register;
+		res = i2c_master_send(tmd2772_i2c_client, databuf, 0x2);
+		if(res <= 0)
+		{
+			return -1;
+	 	}
+	}
+	if(*flag == 1)
+	{
+    	databuf[0] = TMD2772_CMM_ENABLE;
+    	res = i2c_master_send(tmd2772_i2c_client, databuf, 0x1);
+    	if(res <= 0)
+    	{
+    		return -1;
+    	}
+    	res = i2c_master_recv(tmd2772_i2c_client, databuf, 0x1);
+    	if(res <= 0)
+    	{
+    		return -1;
+    	}
+    	store_enable_register = databuf[0];
+	}
+	return 0;
+}
+
 
 /*----------------------------------------------------------------------------*/
 static long tmd2772_unlocked_ioctl(struct file *file, unsigned int cmd,
@@ -1889,9 +2167,11 @@ static long tmd2772_unlocked_ioctl(struct file *file, unsigned int cmd,
 	struct tmd2772_priv *obj = i2c_get_clientdata(client);  
 	long err = 0;
 	void __user *ptr = (void __user*) arg;
-	int dat;
+	unsigned int dat = 0;
 	uint32_t enable;
 	//struct PS_CALI_DATA_STRUCT ps_cali_temp;
+	uint32_t value=0;
+	unsigned int enable_flag=0;
 
 	switch (cmd)
 	{
@@ -1903,6 +2183,14 @@ static long tmd2772_unlocked_ioctl(struct file *file, unsigned int cmd,
 			}
 			if(enable)
 			{
+			#if OFFDATA_DEFAULT
+				if(err = tmd2772_init_client_factory(client))
+				{
+					APS_ERR("init factory ps fail: %ld\n", err);
+					goto err_out;
+				}
+				offset_data = 0;
+			#endif
 				if((err = tmd2772_enable_ps(obj->client, 1)))
 				{
 					APS_ERR("enable ps fail: %ld\n", err); 
@@ -2022,25 +2310,63 @@ static long tmd2772_unlocked_ioctl(struct file *file, unsigned int cmd,
 				goto err_out;
 			}              
 			break;
-
-/*		case ALSPS_SET_PS_CALI:
-			dat = (void __user*)arg;
-			if(dat == NULL)
+			
+              case ALSPS_GET_PS_CALI:
+            mutex_lock(&mutex);
+            tmd2772_ps_calibrate(tmd2772_obj->client);
+            mutex_unlock(&mutex);
+			if(copy_to_user(ptr, &offset_data, sizeof(offset_data)))
 			{
-				APS_LOG("dat == NULL\n");
-				err = -EINVAL;
-				break;	  
+				err = -EFAULT;
+				goto err_out;
 			}
-			if(copy_from_user(&ps_cali_temp,dat, sizeof(ps_cali_temp)))
+			break;
+			
+		case ALSPS_RESET_PS:
+			if(copy_from_user(&enable, ptr, sizeof(enable)))
+			{
+				err = -EFAULT;
+				goto err_out;
+			}
+			if(enable)
+			{
+                mutex_lock(&mutex);
+                offset_data = 0;
+                tmd2772_ps_calibrate_call(tmd2772_obj->client);
+                tmd2772_init_client(tmd2772_obj->client);
+                if(err = tmd2772_enable_ps(tmd2772_obj->client, 1))
+                {
+                    mutex_unlock(&mutex);
+                    goto err_out;
+                }
+                mutex_unlock(&mutex);
+			}
+			break;
+			
+			
+		case ALSPS_SET_PS_CALI:
+			if(copy_from_user(&dat, ptr, sizeof(dat)))
 			{
 				APS_LOG("copy_from_user\n");
 				err = -EFAULT;
 				break;	  
 			}
-			tmd2772_WriteCalibration(&ps_cali_temp);
-			APS_LOG(" ALSPS_SET_PS_CALI %d,%d,%d\t",ps_cali_temp.close,ps_cali_temp.far_away,ps_cali_temp.valid);
+			#if OFFDATA_DEFAULT
+			   enable_flag = 1;
+			   if((err = store_status(&enable_flag)))
+					goto err_out;
+			   offset_data = dat;
+			   printk("ALSPS_SET_PS_CALI data:%d\n",offset_data);
+			   // xiangfei.peng add 20140513 for update ps's threshold also,when entry alsps item without entry ps cali fisrt.
+			   tmd2772_ps_calibrate_call(obj->client);
+			   // xiangfei.peng add 20140513 for update ps's threshold also,when entry alsps item without entry ps cali fisrt.
+			   tmd2772_init_client(client);
+			   enable_flag = 0;
+			   if((err = store_status(&enable_flag)))
+					goto err_out;
+			#endif
 			break;
-		case ALSPS_GET_PS_RAW_DATA_FOR_CALI:
+/*		case ALSPS_GET_PS_RAW_DATA_FOR_CALI:
 			tmd2772_init_client_for_cali(obj->client);
 			err = tmd2772_read_data_for_cali(obj->client,&ps_cali_temp);
 			if(err)
@@ -2067,6 +2393,221 @@ static long tmd2772_unlocked_ioctl(struct file *file, unsigned int cmd,
 	return err;    
 }
 /*----------------------------------------------------------------------------*/
+static ssize_t tmd2772_show_als(struct device_driver *ddri, char *buf)
+{
+	int res;
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	if((res = tmd2772_read_als_ch0(tmd2772_obj->client, &tmd2772_obj->als)))
+	{
+		return snprintf(buf, PAGE_SIZE, "ERROR: %d\n", res);
+	}
+	else
+	{
+		return snprintf(buf, PAGE_SIZE, "0x%04X\n", tmd2772_obj->als);     
+	}
+}
+static ssize_t tmd2772_show_ps(struct device_driver *ddri, char *buf)
+{
+	ssize_t res;
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	if((res = tmd2772_read_ps(tmd2772_obj->client, &tmd2772_obj->ps)))
+	{
+		return snprintf(buf, PAGE_SIZE, "ERROR: %d\n", res);
+	}
+	else
+	{
+		return snprintf(buf, PAGE_SIZE, "ps_dec= %d\n", tmd2772_obj->ps);     
+	}
+}
+static ssize_t tmd2772_show_config(struct device_driver *ddri, char *buf)
+{
+	ssize_t res;
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	res = snprintf(buf, PAGE_SIZE, "(%d %d %d %d %d %d %d %d %d %d)\n",
+		atomic_read(&tmd2772_obj->i2c_retry), atomic_read(&tmd2772_obj->als_debounce), 
+		atomic_read(&tmd2772_obj->ps_mask), atomic_read(&tmd2772_obj->ps_debounce),
+	        atomic_read(&tmd2772_obj->ps_thd_val_high),atomic_read(&tmd2772_obj->ps_thd_val_low),
+	     offset_data,ps_cali.valid,ps_cali.close,ps_cali.far_away);
+	return res;    
+}
+static ssize_t tmd2772_store_ps(struct device_driver *ddri, const char *buf, size_t count)
+{
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	if(2 == sscanf(buf,"%d %d",&en_ps,&ps_value))
+	{
+		printk("--@en_ps:%d,ps_value:%d\n",en_ps,ps_value);
+	}
+	else
+	{
+		printk("-@tmd2772_store_ps is wrong!\n");
+	}
+	return count;
+}
+static ssize_t tmd2772_store_config(struct device_driver *ddri, const char *buf, size_t count)
+{
+	int retry, als_deb, ps_deb, mask, thres, thrh, thrl,valid,ps_close,ps_far_away,setdata;
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	if(10 == sscanf(buf, "%d %d %d %d %d %d %d %d %d %d", &retry, &als_deb, &mask, &ps_deb,&thrh,&thrl,\
+						&setdata,&valid,&ps_close,&ps_far_away))
+	{ 
+		atomic_set(&tmd2772_obj->i2c_retry, retry);
+		atomic_set(&tmd2772_obj->als_debounce, als_deb);
+		atomic_set(&tmd2772_obj->ps_mask, mask);
+		atomic_set(&tmd2772_obj->ps_debounce, ps_deb);
+		atomic_set(&tmd2772_obj->ps_thd_val_high, thrh);
+		atomic_set(&tmd2772_obj->ps_thd_val_low, thrl);
+		offset_data = setdata;
+		ps_cali.valid = valid;
+		ps_cali.close = ps_close;
+		ps_cali.far_away = ps_far_away;
+	}
+	else
+	{
+		APS_ERR("invalid content: '%s', length = %d\n", buf, count);
+	}
+	return count;    
+}
+static ssize_t tmd2772_show_status(struct device_driver *ddri, char *buf)
+{
+	ssize_t len = 0;
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		return 0;
+	}
+	if(tmd2772_obj->hw)
+	{
+		len += snprintf(buf+len, PAGE_SIZE-len, "CUST:i2c_num= %d\nppcount=%x\ncmm=%x\nhigh=%d\nlow=%d\n", 
+			tmd2772_obj->hw->i2c_num, TMD2772_CMM_PPCOUNT_VALUE,  TMD2772_CMM_CONTROL_VALUE,
+			tmd2772_obj->hw->ps_threshold_high,tmd2772_obj->hw->ps_threshold_low);
+	}
+	else
+	{
+		len += snprintf(buf+len, PAGE_SIZE-len, "CUST: NULL\n");
+	}
+	len += snprintf(buf+len, PAGE_SIZE-len, "REGS: %02X %02X %02lX %02lX\n", 
+				atomic_read(&tmd2772_obj->als_cmd_val), atomic_read(&tmd2772_obj->ps_cmd_val), 
+				tmd2772_obj->enable, tmd2772_obj->pending_intr);
+	len += snprintf(buf+len, PAGE_SIZE-len, "MISC: %d %d\n", atomic_read(&tmd2772_obj->als_suspend), atomic_read(&tmd2772_obj->ps_suspend));
+	return len;
+}
+
+static int TMD2772_ReadChipInfo(struct i2c_client *client, char *buf, int bufsize)
+{
+	u8 databuf[10];    
+
+	memset(databuf, 0, sizeof(u8)*10);
+
+	if((NULL == buf)||(bufsize<=30))
+	{
+		return -1;
+	}
+	
+	if(NULL == client)
+	{
+		*buf = 0;
+		return -2;
+	}
+
+	sprintf(buf, "TMD2772 Chip");
+	return 0;
+}
+
+static ssize_t show_chipinfo_value(struct device_driver *ddri, char *buf)
+{
+	struct i2c_client *client = tmd2772_i2c_client;
+	char strbuf[256];
+	if(NULL == client)
+	{
+		printk("i2c client is null!!\n");
+		return 0;
+	}
+	
+	TMD2772_ReadChipInfo(client, strbuf, 256);
+	return snprintf(buf, PAGE_SIZE, "%s\n", strbuf);        
+}
+
+
+static ssize_t tmd2772_show_pscalibrate(struct device_driver *ddri, char *buf)
+{
+	ssize_t res;
+	mutex_lock(&mutex);
+	if(!tmd2772_obj)
+	{
+		APS_ERR("tmd2772_obj is null!!\n");
+		mutex_unlock(&mutex);
+		return 0;
+	}
+	tmd2772_ps_calibrate(tmd2772_obj->client);
+	mutex_unlock(&mutex);
+	return snprintf(buf, PAGE_SIZE, "%d\n",offset_data);
+}
+
+
+static DRIVER_ATTR(chipinfo,   S_IWUSR | S_IRUGO, show_chipinfo_value,      NULL);
+static DRIVER_ATTR(als,     S_IWUSR | S_IRUGO, tmd2772_show_als,   NULL);
+static DRIVER_ATTR(ps,      S_IWUSR | S_IRUGO, tmd2772_show_ps,    tmd2772_store_ps);
+static DRIVER_ATTR(config,  S_IWUSR | S_IRUGO, tmd2772_show_config,tmd2772_store_config);
+static DRIVER_ATTR(status,  S_IWUSR | S_IRUGO, tmd2772_show_status,  NULL);
+static DRIVER_ATTR(pscalibrate,  S_IWUSR | S_IRUGO, tmd2772_show_pscalibrate,  NULL);
+static struct driver_attribute *tmd2772_attr_list[] = {
+    &driver_attr_chipinfo,
+    &driver_attr_als,
+    &driver_attr_ps,       
+    &driver_attr_config,
+    &driver_attr_status,
+    &driver_attr_pscalibrate,
+};
+static int tmd2772_create_attr(struct device_driver *driver) 
+{
+	int idx, err = 0;
+	int num = (int)(sizeof(tmd2772_attr_list)/sizeof(tmd2772_attr_list[0]));
+	if (driver == NULL)
+	{
+		return -EINVAL;
+	}
+	for(idx = 0; idx < num; idx++)
+	{
+		if((err = driver_create_file(driver, tmd2772_attr_list[idx])))
+		{            
+			APS_ERR("driver_create_file (%s) = %d\n", tmd2772_attr_list[idx]->attr.name, err);
+			break;
+		}
+	}    
+	return err;
+}
+static int tmd2772_delete_attr(struct device_driver *driver)
+{
+	int idx ,err = 0;
+	int num = (int)(sizeof(tmd2772_attr_list)/sizeof(tmd2772_attr_list[0]));
+	if (!driver)
+	return -EINVAL;
+	for (idx = 0; idx < num; idx++) 
+	{
+		driver_remove_file(driver, tmd2772_attr_list[idx]);
+	}
+	return err;
+}
 static struct file_operations tmd2772_fops = {
 	.owner = THIS_MODULE,
 	.open = tmd2772_open,
@@ -2164,7 +2705,7 @@ static void tmd2772_early_suspend(struct early_suspend *h)
 		return;
 	}
 
-	#if 1
+	#if 0
 	atomic_set(&obj->als_suspend, 1);
 	if(test_bit(CMC_BIT_ALS, &obj->enable))
 	{
@@ -2188,13 +2729,13 @@ static void tmd2772_late_resume(struct early_suspend *h)
 		return;
 	}
 
-        #if 1
+        #if 0
 	atomic_set(&obj->als_suspend, 0);
 	if(test_bit(CMC_BIT_ALS, &obj->enable))
 	{
 		if((err = tmd2772_enable_als(obj->client, 1)))
 		{
-			APS_ERR("enable als fail: %d\n", err);        
+			printk("luosenalsps tmd2772  33 enable als fail: %d\n", err);        
 
 		}
 	}
@@ -2232,6 +2773,10 @@ int tmd2772_ps_operate(void* self, uint32_t command, void* buff_in, int size_in,
 				value = *(int *)buff_in;
 				if(value)
 				{
+					#if DO_CALIBARTION
+					tmd2772_ps_calibrate_call(obj->client);
+					tmd2772_init_client(obj->client);
+					#endif
 					if((err = tmd2772_enable_ps(obj->client, 1)))
 					{
 						APS_ERR("enable ps fail: %d\n", err); 
@@ -2276,15 +2821,22 @@ int tmd2772_ps_operate(void* self, uint32_t command, void* buff_in, int size_in,
 			else
 			{
 				sensor_data = (hwm_sensor_data *)buff_out;	
+				if(en_ps)
+				{
 				tmd2772_read_ps(obj->client, &obj->ps);
 				
                                 //mdelay(160);
 				tmd2772_read_als_ch0(obj->client, &obj->als);
-				APS_ERR("tmd2772_ps_operate als data=%d!\n",obj->als);
+					//APS_ERR("tmd2772_ps_operate als data=%d!\n",obj->als);
 				sensor_data->values[0] = tmd2772_get_ps_value(obj, obj->ps);
+				}
+				else
+				{
+					sensor_data->values[0] = ps_value;
+				}
 				sensor_data->value_divide = 1;
 				sensor_data->status = SENSOR_STATUS_ACCURACY_MEDIUM;		
-				APS_LOG("tmd2772_ps_operate ps raw data=%d!, value=%d\n", obj->ps, sensor_data->values[0]);
+				//APS_LOG("tmd2772_ps_operate ps raw data=%d!, value=%d\n", obj->ps, sensor_data->values[0]);
 			}
 			break;
 		default:
@@ -2391,6 +2943,167 @@ int tmd2772_als_operate(void* self, uint32_t command, void* buff_in, int size_in
 }
 
 
+int tmd2772_read_mean_call(struct i2c_client *client , int n)
+{
+	struct tmd2772_priv *obj = i2c_get_clientdata(client);
+	int prox_sum = 0, prox_mean = 0;
+	int i, ret = 0;
+	u16 prox_data[20];
+	mdelay(10);
+	for(i = 0; i < n; i++)
+	{
+		if(ret = tmd2772_read_ps(client, &prox_data[i]))
+		{
+			APS_ERR("tmd2772_read_data_for_cali fail: %d\n", i);
+			return ret;
+		}
+		prox_sum += prox_data[i];
+		mdelay(10);
+	}
+	prox_mean = prox_sum/n;
+	return prox_mean;
+}
+static void tmd2772_ps_calibrate_call(struct i2c_client *client)
+{
+	struct tmd2772_priv *obj = i2c_get_clientdata(client);
+	int prox_sum = 0, prox_mean = 0, prox_max = 0;
+	int prox_threshold_hi = 0, prox_threshold_lo = 0;
+	int i, ret = 0;
+	u16 prox_data[20];
+	u8 buffer[2];
+	tmd2772_init_client_for_cali_call(obj->client);
+	prox_mean = tmd2772_read_mean_call(client, 6);
+	if(prox_mean < 800)
+	{
+             if(prox_mean < 500)
+			 	{
+			atomic_set(&obj->ps_thd_val_high, prox_mean+300);
+			atomic_set(&obj->ps_thd_val_low, prox_mean+200);
+		              }
+			else
+				{
+			atomic_set(&obj->ps_thd_val_high, prox_mean+200);
+			atomic_set(&obj->ps_thd_val_low, prox_mean+100);	
+				}
+		       printk("prox_mean<800 \n");
+	}
+	else
+	{
+		atomic_set(&obj->ps_thd_val_high, 800);
+		atomic_set(&obj->ps_thd_val_low, 700);
+		printk("prox_mean>800 \n");
+	}
+}
+int tmd2772_read_mean(struct i2c_client *client , int n)
+{
+	struct tmd2772_priv *obj = i2c_get_clientdata(client);
+	int prox_sum = 0, prox_mean = 0;
+	int i, ret = 0;
+	u16 prox_data[20];
+	mdelay(10);
+	for(i = 0; i < n; i++)
+	{
+		if(ret = tmd2772_read_ps(client, &prox_data[i]))
+		{
+			APS_ERR("tmd2772_read_data_for_cali fail: %d\n", i);
+			return ret;
+		}
+		prox_sum += prox_data[i];
+		mdelay(10);
+	}
+	prox_mean = prox_sum/n;
+	printk("prox_mean %d \n", prox_mean);
+	return prox_mean;
+}
+static void tmd2772_ps_calibrate(struct i2c_client *client)
+{
+	struct tmd2772_priv *obj = i2c_get_clientdata(client);
+	int prox_sum = 0, prox_mean = 0, prox_max = 0;
+	int prox_threshold_hi = 0, prox_threshold_lo = 0;
+	int i, ret = 0;
+	u16 prox_data[20];
+	u8 buffer[2];
+	int err;
+	tmd2772_init_client_for_cali(obj->client);
+	prox_mean = tmd2772_read_mean(client, 10);
+	offset_data = 0;
+
+	if((0 <=prox_mean)&&(prox_mean <50))//if prox_mean_clai is less than 200,plus prox_mean_clai
+	{
+		buffer[0] = TMD2772_CMM_OFFSET;
+		offset_data = buffer[1] = 0x80 | 0x25;  // 0x80  not change. | 0x30  can change
+		err= i2c_master_send(client, buffer, 0x2);
+		if(err<= 0)
+		{
+			printk("prox_mean<50 error \n");
+		}
+		mdelay(5);//5ms
+		prox_mean = tmd2772_read_mean(client, 10);
+	}
+	else if((50 <= prox_mean)&&(prox_mean< 120))//if prox_mean_clai is less than 200,plus prox_mean_clai
+	{
+		buffer[0] = TMD2772_CMM_OFFSET;
+		offset_data = buffer[1] = 0x80 | 0x20;  // 0x80  not change.       | 0x30  can change
+		err= i2c_master_send(client, buffer, 0x2);
+		if(err<= 0)
+		{
+			printk("prox_mean<120 error \n");
+		}
+		mdelay(5);//5ms
+		prox_mean = tmd2772_read_mean(client, 10);
+	}
+	else if((120 <= prox_mean)&&(prox_mean< 200))//if prox_mean_clai is less than 200,plus prox_mean_clai
+	{
+		buffer[0] = TMD2772_CMM_OFFSET;
+		offset_data = buffer[1] = 0x80 | 0x15;  // 0x80  not change.       | 0x30  can change
+		err= i2c_master_send(client, buffer, 0x2);
+		if(err<= 0)
+		{
+			printk("prox_mean<200 error \n");
+		}
+		mdelay(5);//5ms
+		prox_mean = tmd2772_read_mean(client, 10);
+	}
+	else if((600 <= prox_mean)&&(prox_mean < 800))
+	{
+		buffer[0] = TMD2772_CMM_OFFSET;
+		offset_data = buffer[1] = 0x00 | 0x30;   // 0x00  not change.       | 0x30  can change
+		err= i2c_master_send(client, buffer, 0x2);
+		if(err<= 0)
+		{
+			printk("600 < prox_mean < 800 error \n");
+		}
+		mdelay(5);//5ms
+		prox_mean = tmd2772_read_mean(client, 10);
+	}
+	else if((800 <= prox_mean)&&(prox_mean <= 1023))
+	{
+		buffer[0] = TMD2772_CMM_OFFSET;
+		offset_data = buffer[1] = 0x00 | 0x7f;  // 0x80  not change.       | 0x30  can change
+		err= i2c_master_send(client, buffer, 0x2);
+		if(err<= 0)
+		{
+			printk("prox_mean<200 error \n");
+		}
+		mdelay(5);//5ms
+		prox_mean = tmd2772_read_mean(client, 10);
+	}
+	else
+	{
+		offset_data = 0;
+	}
+	if(prox_mean > 800)
+	{
+		atomic_set(&obj->ps_thd_val_high, 800);
+		atomic_set(&obj->ps_thd_val_low, 700);
+		printk("prox_mean>900 \n");
+	}
+	else
+	{
+		atomic_set(&obj->ps_thd_val_high, prox_mean+120);
+		atomic_set(&obj->ps_thd_val_low, prox_mean+80);
+	}
+}
 
 /*----------------------------------------------------------------------------*/
 static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
@@ -2407,12 +3120,14 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	memset(obj, 0, sizeof(*obj));
 	tmd2772_obj = obj;
 
-	obj->hw = get_cust_alsps_hw();
+	obj->hw = TMD2772_get_cust_alsps_hw();
 	tmd2772_get_addr(obj->hw, &obj->addr);
 
 	/*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
-	//INIT_DELAYED_WORK(&obj->eint_work, tmd2772_eint_work);
+	if(0 == obj->hw->polling_mode_ps)
+	{
 	INIT_WORK(&obj->eint_work, tmd2772_eint_work);
+	}
 	obj->client = client;
 	i2c_set_clientdata(client, obj);	
 	atomic_set(&obj->als_debounce, 50);
@@ -2432,7 +3147,8 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	obj->als_level_num = sizeof(obj->hw->als_level)/sizeof(obj->hw->als_level[0]);
 	obj->als_value_num = sizeof(obj->hw->als_value)/sizeof(obj->hw->als_value[0]);  
 	/*Lenovo-sw chenlj2 add 2011-06-03,modified gain 16 to 1/5 accoring to actual thing */
-	obj->als_modulus = 16;
+	obj->als_modulus = (400*100*TMD2772_ZOOM_TIME)/(1*150);//(1/Gain)*(400/Tine), this value is fix after init ATIME and CONTROL register value
+										//(400)/16*2.72 here is amplify *100 //16
 	BUG_ON(sizeof(obj->als_level) != sizeof(obj->hw->als_level));
 	memcpy(obj->als_level, obj->hw->als_level, sizeof(obj->als_level));
 	BUG_ON(sizeof(obj->als_value) != sizeof(obj->hw->als_value));
@@ -2441,9 +3157,15 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	set_bit(CMC_BIT_ALS, &obj->enable);
 	set_bit(CMC_BIT_PS, &obj->enable);
 
-	
+	mutex_init(&mutex);
 	tmd2772_i2c_client = client;
-
+//add by sen.luo 
+#if DO_CALIBARTION
+#else
+     calling_first = 1;
+	tmd2772_init_client_for_cali(client);
+	tmd2772_read_data_for_cali(client,&ps_cali);
+#endif
 	
 	if((err = tmd2772_init_client(client)))
 	{
@@ -2463,6 +3185,11 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		goto exit_create_attr_failed;
 	}
 */
+	if(err = tmd2772_create_attr(&(TMD2772_init_info.platform_diver_addr->driver)))
+	{
+		APS_ERR("create attribute err = %d\n", err);
+		goto exit_create_attr_failed;
+	}
 	obj_ps.self = tmd2772_obj;
 	/*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
 	if(1 == obj->hw->polling_mode_ps)
@@ -2500,6 +3227,7 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 #endif
 
 	APS_LOG("%s: OK\n", __func__);
+	TMD2772_init_flag = 0;
 	return 0;
 
 	exit_create_attr_failed:
@@ -2513,18 +3241,23 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	tmd2772_i2c_client = NULL;           
 //	MT6516_EINTIRQMask(CUST_EINT_ALS_NUM);  /*mask interrupt if fail*/
 	APS_ERR("%s: err = %d\n", __func__, err);
+	TMD2772_init_flag = -1;
 	return err;
 }
 /*----------------------------------------------------------------------------*/
 static int tmd2772_i2c_remove(struct i2c_client *client)
 {
 	int err;	
-/*	
+	/*
 	if(err = tmd2772_delete_attr(&tmd2772_i2c_driver.driver))
 	{
 		APS_ERR("tmd2772_delete_attr fail: %d\n", err);
 	} 
 */
+	if(err = tmd2772_delete_attr(&(TMD2772_init_info.platform_diver_addr->driver)))
+	{
+		APS_ERR("tmd2772_delete_attr fail: %d\n", err);
+	} 
 	if((err = misc_deregister(&tmd2772_device)))
 	{
 		APS_ERR("misc_deregister fail: %d\n", err);    
@@ -2570,25 +3303,58 @@ static struct platform_driver tmd2772_alsps_driver = {
 //		.owner = THIS_MODULE,
 	}
 };
+
+static int TMD_remove(void)
+{
+    struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
+
+    APS_FUN();    
+    tmd2772_power(hw, 0);    
+    i2c_del_driver(&tmd2772_i2c_driver);
+    return 0;
+}
+/*----------------------------------------------------------------------------*/
+
+static int TMD2772_local_init(void)
+{
+   struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
+	APS_FUN();
+
+	tmd2772_power(hw, 1);
+	if(i2c_add_driver(&tmd2772_i2c_driver))
+	{
+		APS_ERR("add driver error\n");
+		return -1;
+	}
+	if(-1 == TMD2772_init_flag)
+	{
+	   return -1;
+	}
+	
+	return 0;
+}
 /*----------------------------------------------------------------------------*/
 static int __init tmd2772_init(void)
 {
 	APS_FUN();
-	struct alsps_hw *hw = get_cust_alsps_hw();
+	struct alsps_hw *hw = TMD2772_get_cust_alsps_hw();
 	APS_LOG("%s: i2c_number=%d\n", __func__,hw->i2c_num); 
 	i2c_register_board_info(hw->i2c_num, &i2c_TMD2772, 1);
+	#if 0
 	if(platform_driver_register(&tmd2772_alsps_driver))
 	{
 		APS_ERR("failed to register driver");
 		return -ENODEV;
 	}
+	#endif
+	hwmsen_alsps_sensor_add(&TMD2772_init_info);
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
 static void __exit tmd2772_exit(void)
 {
 	APS_FUN();
-	platform_driver_unregister(&tmd2772_alsps_driver);
+	//platform_driver_unregister(&tmd2772_alsps_driver);
 }
 /*----------------------------------------------------------------------------*/
 module_init(tmd2772_init);
