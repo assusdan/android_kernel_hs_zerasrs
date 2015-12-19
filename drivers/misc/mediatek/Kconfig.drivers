@@ -1006,6 +1006,10 @@ config MTK_EPL2182
 	bool "EPL2182 for MediaTek package"
 	default n
 
+config MTK_TMD2772
+	bool "TMD2772 for MediaTek package"
+	default n
+
 config MTK_EPL2182_NEW
 	bool "EPL2182 for MediaTek package"
 	default n
