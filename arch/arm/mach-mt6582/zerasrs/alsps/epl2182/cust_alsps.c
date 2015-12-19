@@ -13,7 +13,7 @@ static struct alsps_hw cust_alsps_hw = {
     .ps_threshold_high = 4800,
     .ps_threshold_low = 4500,
 };
-struct alsps_hw *EPL2182_get_cust_alsps_hw(void) {
+struct alsps_hw get_cust_alsps_hw(void) {
     return &cust_alsps_hw;
 }
 
