@@ -2432,7 +2432,7 @@ static int tmd2772_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	obj->als_level_num = sizeof(obj->hw->als_level)/sizeof(obj->hw->als_level[0]);
 	obj->als_value_num = sizeof(obj->hw->als_value)/sizeof(obj->hw->als_value[0]);  
 	/*Lenovo-sw chenlj2 add 2011-06-03,modified gain 16 to 1/5 accoring to actual thing */
-	obj->als_modulus = 16
+	obj->als_modulus = 16;
 	BUG_ON(sizeof(obj->als_level) != sizeof(obj->hw->als_level));
 	memcpy(obj->als_level, obj->hw->als_level, sizeof(obj->als_level));
 	BUG_ON(sizeof(obj->als_value) != sizeof(obj->hw->als_value));
