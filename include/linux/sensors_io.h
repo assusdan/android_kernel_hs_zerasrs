@@ -146,9 +146,14 @@ typedef struct {
 #define ALSPS_SET_PS_THRESHOLD           	_IOW(ALSPS, 0x12, int)
 #define ALSPS_SET_ALS_THRESHOLD           	_IOW(ALSPS, 0x13, int)
 #define ALSPS_GET_PS_CALI                   _IOR(ALSPS, 0x14, int)
+/*----------------------assusdan add----------------*/
 #define ALSPS_GET_ID                        _IOR(ALSPS, 0x15, int)
 #define ALSPS_RESET_PS                      _IOR(ALSPS, 0x16, int)
 #define ALSPS_SET_PS_CALI           	    _IOR(ALSPS, 0x17, int)
+/*---------------------assusdan add---------------*/
+#define AAL_SET_ALS_MODE				_IOW(ALSPS, 0x14,int)
+#define AAL_GET_ALS_MODE				_IOR(ALSPS, 0x15,int)
+#define AAL_GET_ALS_DATA				_IOR(ALSPS, 0x16,int)
 
 
 #define GYROSCOPE							0X86
