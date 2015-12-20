@@ -51,9 +51,6 @@ typedef struct _sensor_data_struct
 } sensor_data_struct;
 
 
-//#define OV5648MIPI_USE_OTP
-
-
 /* SENSOR PREVIEW/CAPTURE VT CLOCK */
 #define OV5648MIPI_PREVIEW_CLK                      84000000
 #define OV5648MIPI_CAPTURE_CLK                      84000000
@@ -99,32 +96,6 @@ typedef struct _sensor_data_struct
 
 /* FRAME RATE UNIT */
 #define OV5648MIPI_FPS(x)                          (10 * (x))
-
-
-//OTP Code Start
-#ifdef OV5648MIPI_USE_OTP
-struct OV5648MIPI_otp_struct
-{   
-    // Data
-	kal_uint8 module_id_yy;
-    kal_uint8 module_id_mm;
-    kal_uint8 module_id_dd;
-    
-    kal_uint8 module_id_code;
-    kal_uint8 module_id_vendor_code;
-    kal_uint8 module_id_version;
-
-    //wb
-	kal_uint16 rg_ratio;
-	kal_uint16 bg_ratio;
-	kal_uint16 gb_gr_ratio;	
-};
-#define RG_Typical 0x293
-#define BG_Typical 0x2F4
-#define GB_GR_Typical 0x3FC
-#endif
-//OTP Code End
-
 
 
 /* EXPORT FUNCTIONS */
