@@ -8,7 +8,7 @@ export ARCH=arm CROSS_COMPILE=../toolchain/linaro-4.9/bin/arm-linux-androideabi-
 echo 'Configure DJN'
 make zerasrs_dijing_defconfig >/dev/null
 echo 'Build DJN'
-make -j4 zImage >/dev/null 2>buildlog.log
+time make -j4 zImage >/dev/null 
 
 if [ ! -f arch/arm/boot/zImage ]
 then
@@ -21,7 +21,7 @@ mv arch/arm/boot/zImage /var/www/html/zImage_DJN
 echo 'Configure CS'
 make zerasrs_cs_defconfig >/dev/null
 echo 'Build CS'
-make -j4 zImage >/dev/null 2>buildlog.log
+time make -j4 zImage >/dev/null 
 
 if [ ! -f arch/arm/boot/zImage ]
 then
