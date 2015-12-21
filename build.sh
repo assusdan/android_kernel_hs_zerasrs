@@ -32,7 +32,13 @@ fi
 echo 'Moving CS'
 mv arch/arm/boot/zImage /var/www/html/zImage_CS 
 
-echo ($(($(date +%s)-$time))/60)
+timee=$(date +%s)
+
+let "runt = timee - times" 
+let "mins = runt / 60"
+let "secs = runt % 60"
+
+echo ($mins minuts and $secs seconds)
 
 #echo 'Configure A'
 #make zerasra_defconfig >/dev/null
