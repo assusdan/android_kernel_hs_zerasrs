@@ -42,7 +42,7 @@
 // Second, we suppose the direction of upward is 0
 // Third, it is 90, 180, 270 in clockwise
 // here we define the main sensor and sub sensor angles to deal with the jpeg orientation
-#define MAIN_SENSOR_TO_PHONE_ANGLE	90
+#define MAIN_SENSOR_TO_PHONE_ANGLE	270
 #define SUB_SENSOR_TO_PHONE_ANGLE	0
 
 
