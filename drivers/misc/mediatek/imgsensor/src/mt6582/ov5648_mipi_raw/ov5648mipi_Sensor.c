@@ -59,7 +59,7 @@ typedef struct OV5648MIPI_sensor_STRUCT
     MSDK_SENSOR_CONFIG_STRUCT cfg_data;
     sensor_data_struct eng; /* engineer mode */
     MSDK_SENSOR_ENG_INFO_STRUCT eng_info;
-    kal_uint8 mirror;
+    kal_uint8 image_mirror;
 
     OV5648MIPI_SENSOR_MODE ov5648mipi_sensor_mode;
     
