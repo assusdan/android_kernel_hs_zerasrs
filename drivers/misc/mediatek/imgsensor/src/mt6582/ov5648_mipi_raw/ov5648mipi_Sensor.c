@@ -109,6 +109,7 @@ static OV5648MIPI_sensor_struct OV5648MIPI_sensor =
     .line_length = OV5648MIPI_PV_PERIOD_PIXEL_NUMS,
     .dummy_pixel = 0,
     .dummy_line = 0,
+    .image_mirror = IMAGE_HV_MIRROR,
 };
 
 static DEFINE_SPINLOCK(ov5648mipi_drv_lock);
