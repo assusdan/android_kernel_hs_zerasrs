@@ -19,7 +19,7 @@ then
 fi
 
 echo 'Moving CS'
-mv arch/arm/boot/zImage /var/www/html/CM_zImage_CS 
+mv arch/arm/boot/zImage /var/www/html/zImage_CS 
 
 echo 'Configure DJN'
 make zerasrs_dijing_defconfig >/dev/null 
@@ -32,7 +32,7 @@ then
 fi
 
 echo 'Moving DJN'
-mv arch/arm/boot/zImage /var/www/html/CM_zImage_DJN 
+mv arch/arm/boot/zImage /var/www/html/zImage_DJN 
 
 
 

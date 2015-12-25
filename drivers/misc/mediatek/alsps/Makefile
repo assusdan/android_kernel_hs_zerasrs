@@ -47,3 +47,7 @@ endif
 ifeq ($(CONFIG_MTK_APDS9930_NEW),y)
 obj-y	+=  APDS9930-new/
 endif
+
+ifeq ($(CONFIG_MTK_TMD2772),y)
+obj-y	+=  tmd2772_auto/
+endif
