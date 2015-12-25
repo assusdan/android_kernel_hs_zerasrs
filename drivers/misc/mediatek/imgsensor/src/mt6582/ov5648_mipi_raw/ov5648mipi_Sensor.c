@@ -518,7 +518,7 @@ void OV5648MIPI_Set_Mirror_Flip(kal_uint8 image_mirror)
 		default:
 		    SENSORDB("Error image_mirror setting");
 	}
-`
+
 }
 
 
