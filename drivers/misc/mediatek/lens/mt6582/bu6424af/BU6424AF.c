@@ -19,7 +19,7 @@ static struct i2c_board_info __initdata kd_lens_dev={ I2C_BOARD_INFO("BU6424AF",
 
 
 #define BU6424AF_DRVNAME "BU6424AF"
-#define BU6424AF_VCM_WRITE_ID           0x18
+#define BU6424AF_VCM_WRITE_ID           0x20
 
 #define BU6424AF_DEBUG
 #ifdef BU6424AF_DEBUG
