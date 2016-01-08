@@ -1449,8 +1449,8 @@ static struct platform_device actuator_dev = {
 	.name		  = "lens_actuator",
 	.id		  = -1,
 };
-static struct platform_device actuator_dev1 = {
-	.name		  = "lens_actuator1",
+static struct platform_device actuator_dev2 = {
+	.name		  = "lens_actuator2",
 	.id		  = -1,
 };
 

@@ -39,5 +39,4 @@ bool          bIsSupportSR;
 
 #define BU6424AFIOC_T_SETMACROPOS _IOW(BU6424AF_MAGIC,3,unsigned long)
 
-#else
 #endif
