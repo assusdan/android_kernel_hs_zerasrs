@@ -2119,7 +2119,7 @@ retval = platform_device_register(&dummychar_device);
     }
 #endif
 #if 1  //defined(CONFIG_ACTUATOR)
-    retval = platform_device_register(&actuator_dev1);
+    retval = platform_device_register(&actuator_dev2);
     if (retval != 0){
         return retval;
     }
