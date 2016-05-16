@@ -89,12 +89,12 @@ ifeq ($(CONFIG_MTK_FT5406),y)
 obj-y	+=  ft5406/
 endif
 
-ifeq ($(CONFIG_MTK_MMS128),y)
-obj-y	+=  mms128/
-endif
-
 ifeq ($(CONFIG_MTK_FT5406_82),y)
 obj-y	+=  ft5406_82/
+endif
+
+ifeq ($(CONFIG_MTK_MMS128),y)
+obj-y	+=  mms128/
 endif
 
 ifeq ($(CONFIG_MTK_FT5206),y)

@@ -421,50 +421,9 @@ config TOUCHSCREEN_MTK
 	help
 	  Say Y here if you have MediaTek touch panel.
 
-config TOUCHSCREEN_MTK_GT9XX
-	bool "GT9XX for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-
-config TOUCHSCREEN_MTK_GT9XX_HOTKNOT_SCP
-	bool "GT9XX with SCP for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-
-config TOUCHSCREEN_MTK_GT9XX_HOTKNOT
-	bool "GT9XX HOTKNOT for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-
-config TOUCHSCREEN_MTK_MAX1187X
-	bool "MAX1187X for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-		
-	
-config TOUCHSCREEN_MTK_GT9XXTB_HOTKNOT
-	bool "GT9XXTB HOTKNOT for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-	
-config TOUCHSCREEN_MTK_GT818B_FPGA
-	bool "GT818B for Mediatek package"
-	default n
-	
-config TOUCHSCREEN_S7020
-	bool "GT9XX for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-
-config TOUCHSCREEN_MTK_GT9XX_2
-	bool "GT9XX for Mediatek package"
-	depends on TOUCHSCREEN_MTK
-        
 # Touch panel
 config MTK_GT9XX
         bool "GT9XX for Mediatek package"
-        default n
-        
-config MTK_MMS244
-        bool "MMS244 for Mediatek package"
-        default n 
-
-config GT9XX_HOTKNOT_FLASHLESS
-        bool "GT9XX_HOTKNOT for Mediatek package"
         default n
 
 config MTK_FT5406
@@ -475,25 +434,38 @@ config MTK_FT5406_82
         bool "FT5406_82 for Mediatek package"
         default n
 
-config MTK_FT5206
-        bool "FT5206 for Mediatek package"
-        default n
-
 config MTK_MMS134
         bool "MMS134 for Mediatek package"
         default n
 
-config MTK_MMS128
-        bool "MMS128 for Mediatek package"
+config MTK_MSG2133
+        bool "MSG2133 for Mediatek package"
         default n
 
-config MTK_S7020
-	bool "MTK_S7020"
-	default n
-	
-config MTK_MIT200
-        bool "MIT200 for Mediatek package"
+config MTK_SYNAPTICS_3508
+        bool "SYNAPTICS_3508 for Mediatek package"
         default n
+
+config MTK_FT6X06
+        bool "FT6X06 for Mediatek package"
+        default n
+
+config MTK_S3203
+        bool "S3203 for Mediatek package"
+        default n
+
+config MTK_CTP_RESET_CONFIG
+	bool "MTK_CTP_RESET_CONFIG"
+	help
+	   Reset TP IC for avoiding issue of DL wrong load.
+
+config TOUCHSCREEN_MTK_GT9XX
+	bool "GT9XX for Mediatek package"
+	depends on TOUCHSCREEN_MTK
+
+config TOUCHSCREEN_MTK_GT9XX_HOTKNOT_SCP
+	bool "GT9XX with SCP for Mediatek package"
+	depends on TOUCHSCREEN_MTK
 
 config TOUCHSCREEN_HP600
 	tristate "HP Jornada 6xx touchscreen"
@@ -695,11 +667,7 @@ config TOUCHSCREEN_WM9713
 	help
 	  Say Y here to enable support for the Wolfson Microelectronics
 	  WM9713 touchscreen controller.
-	  
-config TOUCHSCREEN_MTK_FTS2A052
-	bool "FTS2A052 for Mediatek package"
-	default n
-	
+
 config TOUCHSCREEN_WM97XX_ATMEL
 	tristate "WM97xx Atmel accelerated touch"
 	depends on TOUCHSCREEN_WM97XX && (AVR32 || ARCH_AT91)
@@ -971,10 +939,4 @@ config TOUCHSCREEN_TPS6507X
 	  To compile this driver as a module, choose M here: the
 	  module will be called tps6507x_ts.
 
-config TOUCHSCREEN_SYNAPTICS_S3528
-	tristate "Synaptics S7020 touchscreen"
-	depends on I2C
-	help
-	  This enables support for Synaptics S3528 over I2C based touchscreens.
-	  
 endif

@@ -85,7 +85,7 @@ static int p_point_num = 0;
 #define AGOLD_FINGER_NUM_MAX	5 
 
 #if defined(AGOLD_SUPPORT_AUTO_UPG)
-//#define CFG_SUPPORT_AUTO_UPG
+#define CFG_SUPPORT_AUTO_UPG
 #endif
 
 struct touch_info {
@@ -97,7 +97,7 @@ struct touch_info {
  
 static const struct i2c_device_id tpd_id[] = {{"ft5406_82",0},{}};
 
-//unsigned short force[] = {0,0x70,I2C_CLIENT_END,I2C_CLIENT_END}; 
+unsigned short force[] = {0,0x70,I2C_CLIENT_END,I2C_CLIENT_END}; 
 //static const unsigned short * const forces[] = { force, NULL };
 //static struct i2c_client_address_data addr_data = { .forces = forces, };
 static struct i2c_board_info __initdata i2c_tpd = { I2C_BOARD_INFO("ft5406_82", (0x70>>1))};
@@ -1600,3 +1600,4 @@ static void __exit tpd_driver_exit(void) {
  
  module_init(tpd_driver_init);
  module_exit(tpd_driver_exit);
+
